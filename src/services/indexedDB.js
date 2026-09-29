@@ -384,28 +384,3 @@ export function formatFullDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-/**
- * Get relationship options
- */
-export const RELATIONSHIP_OPTIONS = [
-  'Family',
-  'Parent',
-  'Sibling',
-  'Relative',
-  'Friend',
-  'School Friend',
-  'College Friend',
-  'Classmate',
-  'Cousin',
-  'Other'
-];
-
-/**
- * Get event type options
- */
-export const EVENT_TYPE_OPTIONS = [
-  { value: 'birthday', label: '🎂 Birthday', icon: '🎂' },
-  { value: 'anniversary', label: '💍 Anniversary', icon: '💍' },
-  { value: 'other', label: '📅 Other', icon: '📅' }
-];
