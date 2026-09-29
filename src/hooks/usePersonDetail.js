@@ -112,16 +112,21 @@ export function usePersonDetail(personId) {
     [personId]
   );
 
-  const editEvent = useCallback(async (id, data) => {
-    const saved = await saveEvent({ ...data, id });
-    setPerson((current) => ({
-      ...current,
-      events: sortEventsByUpcoming(
-        (current.events || []).map((event) => (event.id === id ? saved : event))
-      ),
-    }));
-    return saved;
-  }, []);
+  const editEvent = useCallback(
+    async (id, data) => {
+      // Merge with the stored record so personId and createdAt survive the edit.
+      const existing = (person?.events || []).find((event) => event.id === id);
+      const saved = await saveEvent({ ...existing, ...data, id, personId });
+      setPerson((current) => ({
+        ...current,
+        events: sortEventsByUpcoming(
+          (current.events || []).map((event) => (event.id === id ? saved : event))
+        ),
+      }));
+      return saved;
+    },
+    [person, personId]
+  );
 
   const removeEvent = useCallback(async (id) => {
     await deleteEvent(id);
@@ -142,14 +147,19 @@ export function usePersonDetail(personId) {
     [personId]
   );
 
-  const editNote = useCallback(async (id, content) => {
-    const saved = await saveNote({ id, content });
-    setPerson((current) => ({
-      ...current,
-      notes: (current.notes || []).map((note) => (note.id === id ? saved : note)),
-    }));
-    return saved;
-  }, []);
+  const editNote = useCallback(
+    async (id, content) => {
+      // Merge with the stored record so personId and createdAt survive the edit.
+      const existing = (person?.notes || []).find((note) => note.id === id);
+      const saved = await saveNote({ ...existing, id, content, personId });
+      setPerson((current) => ({
+        ...current,
+        notes: (current.notes || []).map((note) => (note.id === id ? saved : note)),
+      }));
+      return saved;
+    },
+    [person, personId]
+  );
 
   const removeNote = useCallback(async (id) => {
     await deleteNote(id);

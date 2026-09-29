@@ -245,7 +245,7 @@ export default function GallerySection({ images = [], onUpload, onDelete }) {
                 onClick={() => inputRef.current?.click()}
               >
                 <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                Add photos
+                Add your first photos
               </button>
             }
           />

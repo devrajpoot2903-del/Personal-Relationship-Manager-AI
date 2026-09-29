@@ -147,7 +147,7 @@ export default function SongsSection({ songs = [], onAdd, onDelete }) {
             action={
               <button type="button" className="btn-secondary" onClick={onAdd}>
                 <Music4 className="h-4 w-4" aria-hidden="true" />
-                Add song
+                Add your first song
               </button>
             }
           />

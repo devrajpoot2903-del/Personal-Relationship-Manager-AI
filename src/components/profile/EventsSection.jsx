@@ -107,7 +107,7 @@ export default function EventsSection({ events = [], onAdd, onEdit, onDelete }) 
             action={
               <button type="button" className="btn-secondary" onClick={onAdd}>
                 <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-                Add date
+                Add your first date
               </button>
             }
           />

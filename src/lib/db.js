@@ -119,6 +119,36 @@ const getOne = (store, id) => run(store, 'readonly', (s) => s.get(id));
 const put = (store, value) => run(store, 'readwrite', (s) => s.put(value));
 const remove = (store, id) => run(store, 'readwrite', (s) => s.delete(id));
 
+/**
+ * Child records are only reachable through their `personId` index, so writing
+ * one without it would silently orphan the record. Guard against that here.
+ */
+function requirePersonId(storeName, record) {
+  if (!record?.personId) {
+    throw new Error(`A ${storeName} record must belong to a person (personId is required).`);
+  }
+  return record;
+}
+
+/** Copies only the listed keys that are actually present on the source. */
+function pick(source, keys) {
+  const result = {};
+  for (const key of keys) {
+    if (source?.[key] !== undefined) result[key] = source[key];
+  }
+  return result;
+}
+
+/** The person-level fields; everything else belongs in its own store. */
+const PERSON_KEYS = [
+  'name',
+  'relationship',
+  'designation',
+  'instagram',
+  'profileImage',
+  'createdAt',
+];
+
 /** Reads every record in `store` whose `personId` matches. */
 async function getByPerson(store, personId) {
   const db = await openDatabase();
@@ -151,10 +181,14 @@ export function getPerson(id) {
   return getOne(STORES.PEOPLE, id);
 }
 
+/**
+ * Writes a person. Only person-level fields are persisted, so events, notes,
+ * images or songs can never leak into the `people` store.
+ */
 export async function savePerson(person) {
   const now = new Date().toISOString();
   const record = {
-    ...person,
+    ...pick(person, PERSON_KEYS),
     id: person.id || createId('person'),
     createdAt: person.createdAt || now,
     updatedAt: now,
@@ -176,11 +210,11 @@ export function listEvents(personId) {
 }
 
 export async function saveEvent(event) {
-  const record = {
+  const record = requirePersonId('event', {
     ...event,
     id: event.id || createId('event'),
     createdAt: event.createdAt || new Date().toISOString(),
-  };
+  });
   await put(STORES.EVENTS, record);
   return record;
 }
@@ -199,12 +233,12 @@ export function listNotes(personId) {
 
 export async function saveNote(note) {
   const now = new Date().toISOString();
-  const record = {
+  const record = requirePersonId('note', {
     ...note,
     id: note.id || createId('note'),
     createdAt: note.createdAt || now,
     updatedAt: now,
-  };
+  });
   await put(STORES.NOTES, record);
   return record;
 }
@@ -222,11 +256,11 @@ export function listImages(personId) {
 }
 
 export async function saveImage(image) {
-  const record = {
+  const record = requirePersonId('image', {
     ...image,
     id: image.id || createId('image'),
     createdAt: image.createdAt || new Date().toISOString(),
-  };
+  });
   await put(STORES.IMAGES, record);
   return record;
 }
@@ -244,11 +278,11 @@ export function listSongs(personId) {
 }
 
 export async function saveSong(song) {
-  const record = {
+  const record = requirePersonId('song', {
     ...song,
     id: song.id || createId('song'),
     createdAt: song.createdAt || new Date().toISOString(),
-  };
+  });
   await put(STORES.SONGS, record);
   return record;
 }

@@ -200,7 +200,7 @@ export default function NotesSection({ notes = [], onAdd, onSave, onDelete }) {
               action={
                 <button type="button" className="btn-secondary" onClick={() => setIsAdding(true)}>
                   <NotebookPen className="h-4 w-4" aria-hidden="true" />
-                  Add note
+                  Add your first note
                 </button>
               }
             />

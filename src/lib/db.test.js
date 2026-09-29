@@ -1,3 +1,6 @@
+// @vitest-environment node
+// Blob structured-cloning needs the Node environment: jsdom's Blob class is not
+// cloneable by fake-indexeddb, while real browsers store Blobs natively.
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -109,6 +112,55 @@ describe('IndexedDB persistence', () => {
     expect(bundle.images).toHaveLength(2);
     expect(bundle.images[0].name).toBe('b.jpg');
     expect(bundle.images[0].blob).toBeInstanceOf(Blob);
+  });
+
+  it('refuses to save a child record without a personId', async () => {
+    // Records are only reachable via the personId index, so a missing personId
+    // would silently orphan them. This must fail loudly instead.
+    await expect(saveNote({ content: 'orphan' })).rejects.toThrow(/personId is required/i);
+    await expect(saveEvent({ type: 'birthday', date: '1998-03-12' })).rejects.toThrow(
+      /personId is required/i
+    );
+    await expect(saveImage({ blob: fakeBlob(), name: 'x.jpg' })).rejects.toThrow(
+      /personId is required/i
+    );
+    await expect(saveSong({ type: 'link', title: 'x', url: 'https://x.com' })).rejects.toThrow(
+      /personId is required/i
+    );
+  });
+
+  it('keeps a note attached to its person when it is edited', async () => {
+    const person = await createPerson('Rahul');
+    const note = await saveNote({ personId: person.id, content: 'Loves Marvel' });
+
+    // Simulate an edit that merges with the stored record.
+    await saveNote({ ...note, content: 'Loves Marvel and DC' });
+
+    const notes = await getPersonBundle(person.id).then((bundle) => bundle.notes);
+    expect(notes).toHaveLength(1);
+    expect(notes[0].content).toBe('Loves Marvel and DC');
+    expect(notes[0].personId).toBe(person.id);
+  });
+
+  it('never writes relationship arrays into the people store', async () => {
+    const person = await createPerson('Rahul');
+
+    // Callers sometimes hold the fully-loaded bundle; savePerson must ignore children.
+    await savePerson({
+      ...person,
+      name: 'Rahul Sharma',
+      events: [{ id: 'e1', date: '1998-03-12' }],
+      notes: [{ id: 'n1', content: 'x' }],
+      images: [{ id: 'i1', blob: fakeBlob(2048) }],
+      songs: [{ id: 's1', title: 'y' }],
+    });
+
+    const stored = await getPerson(person.id);
+    expect(stored.name).toBe('Rahul Sharma');
+    expect(stored.events).toBeUndefined();
+    expect(stored.notes).toBeUndefined();
+    expect(stored.images).toBeUndefined();
+    expect(stored.songs).toBeUndefined();
   });
 
   it('does not leak one person’s records into another', async () => {

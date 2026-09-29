@@ -160,7 +160,7 @@ export default function HomePage() {
                   className="btn-secondary"
                   onClick={() => setSearchQuery('')}
                 >
-                  Clear search
+                  Show all people
                 </button>
               }
             />

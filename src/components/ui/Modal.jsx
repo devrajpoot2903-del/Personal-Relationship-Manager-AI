@@ -40,13 +40,19 @@ export default function Modal({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    // Move focus to the first focusable element inside the panel.
+    // Move focus into the dialog — but only to a real text field, and only if
+    // the user has not already focused something inside it. Stealing focus from
+    // a button (or an already-focused input) would interrupt typing.
     const focusTimer = window.setTimeout(() => {
-      const focusable = panelRef.current?.querySelector(
-        'input:not([type="hidden"]), textarea, select, button'
+      const panel = panelRef.current;
+      if (!panel || panel.contains(document.activeElement)) return;
+
+      const field = panel.querySelector(
+        'input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]), textarea, select'
       );
-      focusable?.focus();
-    }, 30);
+
+      (field ?? panel).focus();
+    }, 40);
 
     return () => {
       document.removeEventListener('keydown', onKeyDown);
@@ -71,7 +77,8 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`animate-scale-in relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-ink-200/70 bg-white shadow-[var(--shadow-modal)] sm:rounded-2xl ${SIZE_CLASS[size] ?? SIZE_CLASS.md}`}
+        tabIndex={-1}
+        className={`animate-scale-in relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-ink-200/70 bg-white shadow-[var(--shadow-modal)] focus:outline-none sm:rounded-2xl ${SIZE_CLASS[size] ?? SIZE_CLASS.md}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-ink-100 px-5 py-4">
           <div className="min-w-0">
