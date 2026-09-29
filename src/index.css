@@ -202,6 +202,30 @@
     @apply flex items-center gap-2 text-base font-semibold text-ink-900;
   }
 
+  /**
+   * Reveal-on-hover actions.
+   *
+   * On a mouse-driven device these stay quiet until hover, keeping cards and
+   * rows clean. On touch devices there is no hover, so they must stay visible —
+   * otherwise deleting a photo or editing a note would be impossible on a phone.
+   */
+  .reveal-actions {
+    @apply opacity-100 transition-opacity duration-150;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reveal-actions {
+    opacity: 0;
+  }
+
+  .group:hover .reveal-actions,
+  .group:focus-within .reveal-actions,
+  .reveal-actions:focus-visible,
+  .reveal-actions:focus-within {
+    opacity: 1;
+  }
+
   /* ---- Skeleton ---- */
   .skeleton {
     @apply animate-pulse rounded-lg bg-ink-200/70;

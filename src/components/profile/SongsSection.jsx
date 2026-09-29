@@ -54,7 +54,7 @@ function AudioSong({ song, onDelete }) {
 
       <button
         type="button"
-        className="btn-icon shrink-0 opacity-0 transition-opacity focus:opacity-100 group-hover:opacity-100 hover:text-red-600"
+        className="reveal-actions btn-icon shrink-0 hover:text-red-600"
         aria-label={`Delete ${song.title}`}
         onClick={() => onDelete(song)}
       >
@@ -106,7 +106,7 @@ function LinkSong({ song, onDelete }) {
 
       <button
         type="button"
-        className="btn-icon shrink-0 opacity-0 transition-opacity focus:opacity-100 group-hover:opacity-100 hover:text-red-600"
+        className="reveal-actions btn-icon shrink-0 hover:text-red-600"
         aria-label={`Delete ${song.title}`}
         onClick={() => onDelete(song)}
       >

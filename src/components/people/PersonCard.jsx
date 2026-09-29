@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays, Clock3, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { CalendarDays, Clock3, MoreVertical, Pencil, Trash2, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Avatar from '../ui/Avatar';
 import {
@@ -90,16 +90,13 @@ export default function PersonCard({ person, onEdit, onDelete, index = 0 }) {
                 )}
               </div>
 
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1 text-xs text-ink-500">
-                  <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                  {formatDayMonthLong(event.date)}
-                  {!event.recurring && <span className="text-ink-400">· once</span>}
-                </span>
-              </div>
+              <p className="mt-2 flex items-center gap-1 text-xs text-ink-500">
+                <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                {formatDayMonthLong(event.date)}
+                {!event.recurring && <span className="text-ink-400">· one time</span>}
+              </p>
 
-              <span
-                className={`mt-2 ${countdownPillClass(countdown)}`}
+              <span className={`mt-2 ${countdownPillClass(countdown)}`}
                 title={countdownLabel(countdown)}
               >
                 <Clock3 className="h-3 w-3" aria-hidden="true" />
@@ -125,8 +122,7 @@ export default function PersonCard({ person, onEdit, onDelete, index = 0 }) {
           aria-label={`More options for ${person.name}`}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          className="rounded-lg bg-white/90 p-1.5 text-ink-600 opacity-0 shadow-sm backdrop-blur transition-opacity
-                     focus:opacity-100 group-hover:opacity-100 hover:bg-white"
+          className="reveal-actions rounded-lg bg-white/90 p-1.5 text-ink-600 shadow-sm backdrop-blur hover:bg-white"
         >
           <MoreVertical className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -142,7 +138,7 @@ export default function PersonCard({ person, onEdit, onDelete, index = 0 }) {
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink-700 hover:bg-ink-50"
               onClick={() => setMenuOpen(false)}
             >
-              <span className="h-4 w-4" aria-hidden="true">👤</span>
+              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
               Open profile
             </Link>
 

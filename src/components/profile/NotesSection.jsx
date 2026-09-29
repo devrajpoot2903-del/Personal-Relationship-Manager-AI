@@ -70,7 +70,7 @@ function NoteCard({ note, onSave, onDelete }) {
             </p>
           </div>
 
-          <div className="flex shrink-0 gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+          <div className="reveal-actions flex shrink-0 gap-1">
             <button
               type="button"
               className="btn-icon"

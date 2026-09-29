@@ -64,8 +64,8 @@ function GalleryTile({ image, index, onOpen, onDelete }) {
           onDelete(image);
         }}
         aria-label={`Delete ${image.name || 'photo'}`}
-        className="absolute right-2 top-2 rounded-lg bg-ink-900/60 p-1.5 text-white opacity-0 backdrop-blur-sm
-                   transition-opacity focus:opacity-100 group-hover:opacity-100 hover:bg-red-600"
+        className="reveal-actions absolute right-2 top-2 rounded-lg bg-ink-900/60 p-1.5 text-white
+                   backdrop-blur-sm hover:bg-red-600"
       >
         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
