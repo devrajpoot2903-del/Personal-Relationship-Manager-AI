@@ -58,7 +58,7 @@ no account, no login and no cloud sync.**
 | Routing | React Router (hash routing) |
 | Icons | lucide-react |
 | Persistence | IndexedDB (native browser API) |
-| Tests | Vitest + fake-indexeddb |
+| Tests | Vitest, Testing Library, jsdom, fake-indexeddb |
 
 No Express, no MongoDB, no SQL, no Firebase, no Supabase, no authentication.
 
@@ -74,11 +74,33 @@ npm run dev      # http://localhost:5173
 Other scripts:
 
 ```bash
-npm run build    # production build into dist/
-npm run preview  # serve the production build
-npm test         # run the unit tests
-npm run lint     # oxlint
+npm run build      # production build into dist/
+npm run preview    # serve the production build
+npm test           # run the test suite (45 tests)
+npm run test:watch # re-run tests on change
+npm run lint       # oxlint
 ```
+
+### Tests
+
+`npm test` covers three layers:
+
+- **`src/lib/dates.test.js`** — countdown maths with a frozen clock: today,
+  tomorrow, a 164-day gap, leap/shift handling, rolling annual dates, one-off
+  past dates, and ordering events by what is coming up next.
+- **`src/lib/db.test.js`** — real IndexedDB round-trips (via `fake-indexeddb`)
+  proving people, events, notes, photos and songs persist; that binaries come
+  back as `Blob`s rather than Base64; that one person's records never leak into
+  another's; and that deleting a person removes everything attached to them.
+- **`src/test/app.test.jsx`** and **`src/test/journey.test.jsx`** — the actual
+  React app rendered with Testing Library: the full CRUD surface, validation and
+  error messages, search, confirmation prompts, image and audio upload, the
+  lightbox, and a simulated browser refresh that rebuilds the UI from IndexedDB
+  alone.
+
+> The persistence suite runs in the Node environment because jsdom's `Blob` is
+> not structured-cloneable by `fake-indexeddb`; Node's `Blob` is, exactly as in a
+> real browser. The UI tests run in jsdom.
 
 ---
 
@@ -138,10 +160,14 @@ npm run build     # outputs dist/
 ```
 
 - **Vercel / Netlify** — build command `npm run build`, output directory `dist`
-- **GitHub Pages** — publish the `dist` folder
+- **GitHub Pages** — a workflow is included at
+  `.github/workflows/deploy-pages.yml`; enable Pages with "GitHub Actions" as the
+  source and it builds, tests and deploys on every push to `main`
+- **Anywhere else** — upload the contents of `dist/` as static files
 
-Asset paths are relative (`base: './'`) and routing uses the URL hash, so refreshing
-a profile page works on any host without rewrite rules.
+Asset paths are relative (`base: './'`) and routing uses the URL hash, so the same
+build works from a domain root *or* a project subpath, and refreshing a profile
+page works on any host without rewrite rules.
 
 > **Note on data:** deployment only hosts the application code. IndexedDB is
 > per-browser and per-device, so your people and memories do **not** travel between
