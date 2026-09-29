@@ -1,26 +1,32 @@
 {
-  "name": "personal-relationship-manager-ai",
+  "name": "personal-relationship-manager",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "A personal memory book — people, important dates, notes, photos and songs, kept locally in the browser with IndexedDB.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "preview": "vite preview",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "lucide-react": "^1.48.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
-    "autoprefixer": "^10.6.1",
+    "fake-indexeddb": "^6.2.5",
     "oxlint": "^1.81.0",
-    "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.2"
   }
 }

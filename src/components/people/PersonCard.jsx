@@ -1,165 +1,181 @@
-import { useState, useCallback } from 'react';
-import { formatDate, calculateCountdown, getCountdownLabel, getCountdownClass, createObjectURL, revokeObjectURL, RELATIONSHIP_OPTIONS, EVENT_TYPE_OPTIONS } from '../../types';
-import { createObjectURL: createObjectURLService, revokeObjectURL: revokeObjectURLService } from '../../services/indexedDB';
-import { Calendar, User, Heart, Gift, Clock, MoreVertical } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CalendarDays, Clock3, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import Avatar from '../ui/Avatar';
+import {
+  countdownLabel,
+  countdownPillClass,
+  formatDayMonthLong,
+  getCountdown,
+  pickPrimaryEvent,
+  yearsAtNextOccurrence,
+} from '../../lib/dates';
+import { EVENT_TYPE_META } from '../../lib/constants';
 
-const PersonCard = ({ person, onClick, onEdit, onDelete, onOpenProfile }) => {
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [showMenu, setShowMenu] = useState(false);
+/**
+ * The person card: photo first, then name, relationship and the next occasion
+ * with a live countdown. Deliberately not a contact-list row.
+ */
+export default function PersonCard({ person, onEdit, onDelete, index = 0 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  // Get the most relevant event for countdown (next upcoming)
-  const getMainEvent = () => {
-    if (!person.events?.length) return null;
-    const eventsWithCountdown = person.events.map(event => ({
-      ...event,
-      countdown: calculateCountdown(event.date, event.recurring)
-    }));
-    eventsWithCountdown.sort((a, b) => {
-      if (a.countdown.isPast && !b.countdown.isPast) return 1;
-      if (!a.countdown.isPast && b.countdown.isPast) return -1;
-      return a.countdown.days - b.countdown.days;
-    });
-    return eventsWithCountdown[0];
-  };
+  const event = pickPrimaryEvent(person.events || []);
+  const countdown = event ? getCountdown(event.date, event.recurring) : null;
+  const meta = event ? EVENT_TYPE_META[event.type] ?? EVENT_TYPE_META.other : null;
+  const years = event ? yearsAtNextOccurrence(event.date, event.recurring) : null;
 
-  const mainEvent = getMainEvent();
-
-  // Handle profile image
+  // Close the overflow menu on outside click / Escape.
   useEffect(() => {
-    if (person.profileImage?.blob) {
-      const url = createObjectURL(person.profileImage.blob);
-      setPreviewUrl(url);
-    } else if (person.profileImage?.url) {
-      setPreviewUrl(person.profileImage.url);
-    }
-    return () => {
-      if (previewUrl) revokeObjectURL(previewUrl);
+    if (!menuOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
     };
-  }, [person.profileImage]);
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
 
-  const eventIcon = mainEvent ? EVENT_TYPE_OPTIONS.find(e => e.value === mainEvent.type)?.icon || '📅' : '📅';
-  const eventTypeLabel = mainEvent ? EVENT_TYPE_OPTIONS.find(e => e.value === mainEvent.type)?.label || 'Event' : 'No events';
-  const countdownLabel = mainEvent ? getCountdownLabel(mainEvent.countdown) : 'No events';
-  const countdownClass = mainEvent ? getCountdownClass(mainEvent.countdown) : 'countdown-normal';
-
-  const handleClick = (e) => {
-    if (!e.target.closest('button') && !e.target.closest('[role="menu"]')) {
-      onClick?.(person.id);
-      if (onOpenProfile) onOpenProfile(person.id);
-    }
-  };
-
-  const handleEdit = (e) => {
-    e.stopPropagation();
-    onEdit?.(person);
-    setShowMenu(false);
-  };
-
-  const handleDelete = (e) => {
-    e.stopPropagation();
-    onDelete?.(person);
-    setShowMenu(false);
-  };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
 
   return (
-    <article 
-      className="group bg-white rounded-2xl border border-neutral-100 overflow-hidden card-hover cursor-pointer"
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(person.id); }}}
+    <article
+      className="card-interactive animate-rise group relative overflow-hidden"
+      style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
     >
-      {/* Profile Image */}
-      <div className="relative aspect-square bg-neutral-100 overflow-hidden">
-        {previewUrl ? (
-          <img 
-            src={previewUrl} 
-            alt={person.name} 
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      <Link to={`/person/${person.id}`} className="block focus:outline-none">
+        {/* Photo */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <Avatar
+            name={person.name}
+            blob={person.profileImage?.blob}
+            size="full"
+            circular={false}
+            className="transition-transform duration-300 group-hover:scale-[1.03]"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-neutral-100">
-            <User className="w-16 h-16 text-neutral-300" />
-          </div>
-        )}
-        
-        {/* Menu */}
-        <div className="absolute top-2 right-2 z-10">
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-              className="btn-icon bg-white/90 backdrop-blur-sm"
-              aria-label="More options"
-            >
-              <MoreVertical className="w-5 h-5" />
-            </button>
-            {showMenu && (
-              <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-neutral-100 py-1 animate-scale-in">
-                <button
-                  onClick={handleEdit}
-                  className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-2"
-                >
-                  <User className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-neutral-50 flex items-center gap-2"
-                >
-                  <Heart className="w-4 h-4" />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
+
+          {countdown?.isToday && (
+            <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-brand-700 shadow-sm">
+              Today 🎉
+            </span>
+          )}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-neutral-900 text-lg truncate">{person.name}</h3>
-        
-        <p className="text-sm text-neutral-500 mt-1 flex items-center gap-1">
-          <User className="w-3.5 h-3.5" />
-          {person.relationship}
-        </p>
+        {/* Details */}
+        <div className="px-4 pb-4 pt-3.5">
+          <h3 className="truncate text-[15px] font-semibold leading-tight text-ink-900">
+            {person.name}
+          </h3>
 
-        {person.designation && (
-          <p className="text-xs text-neutral-400 mt-0.5 truncate">{person.designation}</p>
-        )}
+          <p className="mt-0.5 truncate text-[13px] text-ink-500">
+            {person.relationship}
+            {person.designation ? ` · ${person.designation}` : ''}
+          </p>
 
-        {/* Main Event */}
-        {mainEvent && (
-          <div className="mt-3 pt-3 border-t border-neutral-100">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-lg">{eventIcon}</span>
-              <span className="font-medium text-neutral-700">
-                {mainEvent.title || eventTypeLabel.replace(/^🎂\s|^💍\s|^📅\s/, '')}
+          {event ? (
+            <div className="mt-3 border-t border-ink-100 pt-3">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-ink-700">
+                <span aria-hidden="true">{meta.icon}</span>
+                <span className="truncate">
+                  {event.type === 'other' && event.title ? event.title : meta.label}
+                </span>
+                {years !== null && event.type !== 'other' && (
+                  <span className="text-ink-400">· {years}</span>
+                )}
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1 text-xs text-ink-500">
+                  <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                  {formatDayMonthLong(event.date)}
+                  {!event.recurring && <span className="text-ink-400">· once</span>}
+                </span>
+              </div>
+
+              <span
+                className={`mt-2 ${countdownPillClass(countdown)}`}
+                title={countdownLabel(countdown)}
+              >
+                <Clock3 className="h-3 w-3" aria-hidden="true" />
+                {countdownLabel(countdown)}
               </span>
             </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span className="text-sm text-neutral-500 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                {formatDate(mainEvent.date)}
-                {mainEvent.recurring && <span className="text-xs text-neutral-400">(yearly)</span>}
-              </span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${countdownClass}`}>
-                {countdownLabel}
-              </span>
+          ) : (
+            <div className="mt-3 border-t border-ink-100 pt-3">
+              <p className="text-xs text-ink-400">No dates added yet</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </Link>
 
-        {!mainEvent && (
-          <div className="mt-3 pt-3 border-t border-neutral-100 text-center">
-            <p className="text-sm text-neutral-400">No events added</p>
+      {/* Overflow menu */}
+      <div ref={menuRef} className="absolute right-2.5 top-2.5">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            setMenuOpen((open) => !open);
+          }}
+          aria-label={`More options for ${person.name}`}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          className="rounded-lg bg-white/90 p-1.5 text-ink-600 opacity-0 shadow-sm backdrop-blur transition-opacity
+                     focus:opacity-100 group-hover:opacity-100 hover:bg-white"
+        >
+          <MoreVertical className="h-4 w-4" aria-hidden="true" />
+        </button>
+
+        {menuOpen && (
+          <div
+            role="menu"
+            className="animate-scale-in absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-xl border border-ink-200/70 bg-white py-1 shadow-[var(--shadow-lift)]"
+          >
+            <Link
+              to={`/person/${person.id}`}
+              role="menuitem"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink-700 hover:bg-ink-50"
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className="h-4 w-4" aria-hidden="true">👤</span>
+              Open profile
+            </Link>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                onEdit?.(person);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink-700 hover:bg-ink-50"
+            >
+              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+              Edit person
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                onDelete?.(person);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Delete person
+            </button>
           </div>
         )}
       </div>
     </article>
   );
-};
-
-PersonCard.displayName = 'PersonCard';
-
-export default PersonCard;
+}
