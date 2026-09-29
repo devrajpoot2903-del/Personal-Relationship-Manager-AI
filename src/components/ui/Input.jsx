@@ -5,25 +5,28 @@ const Input = forwardRef(({
   error, 
   className = '', 
   labelClassName = '',
+  id,
   ...props 
 }, ref) => {
-  const id = `input-${Math.random().toString(36).substr(2, 9)}`;
+  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
   
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={id} className={`block text-sm font-medium text-neutral-700 mb-1.5 ${labelClassName}`}>
+        <label htmlFor={inputId} className={`block text-sm font-medium text-neutral-700 mb-1.5 ${labelClassName}`}>
           {label}
-        </label>}
-        <input
-          ref={ref}
-          className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-150"
-          {...props}
-        />
-        {props.error && <p className="mt-1.5 text-sm text-red-600">{props.error}</p>}
-      </div>
-    );
-});
+        </label>
+      )}
+      <input
+        ref={ref}
+        id={inputId}
+        className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-150"
+        {...props}
+      />
+      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+};
 
 Input.displayName = 'Input';
 
