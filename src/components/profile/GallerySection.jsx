@@ -195,7 +195,10 @@ export default function GallerySection({ images = [], onUpload, onDelete }) {
           <span aria-hidden="true">🖼️</span>
           Memories
           {images.length > 0 && (
-            <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">
+            <span
+              aria-hidden="true"
+              className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500"
+            >
               {images.length}
             </span>
           )}

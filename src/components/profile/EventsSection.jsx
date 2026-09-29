@@ -85,7 +85,10 @@ export default function EventsSection({ events = [], onAdd, onEdit, onDelete }) 
           <span aria-hidden="true">📅</span>
           Important dates
           {sorted.length > 0 && (
-            <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">
+            <span
+              aria-hidden="true"
+              className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500"
+            >
               {sorted.length}
             </span>
           )}

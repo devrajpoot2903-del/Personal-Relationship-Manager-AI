@@ -128,7 +128,10 @@ export default function NotesSection({ notes = [], onAdd, onSave, onDelete }) {
           <span aria-hidden="true">📝</span>
           Notes
           {notes.length > 0 && (
-            <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">
+            <span
+              aria-hidden="true"
+              className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500"
+            >
               {notes.length}
             </span>
           )}

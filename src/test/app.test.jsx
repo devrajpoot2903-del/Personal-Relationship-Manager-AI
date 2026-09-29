@@ -299,8 +299,10 @@ describe('PersonProfilePage', () => {
     await user.type(screen.getByPlaceholderText(/loves marvel/i), 'Loves Marvel movies');
     await user.click(screen.getByRole('button', { name: /save note/i }));
 
+    await waitFor(async () => {
+      expect(await listNotes(person.id)).toHaveLength(1);
+    });
     expect(await screen.findByText('Loves Marvel movies')).toBeInTheDocument();
-    expect(await listNotes(person.id)).toHaveLength(1);
 
     // Edit
     await user.click(screen.getByRole('button', { name: /edit note/i }));
@@ -309,10 +311,12 @@ describe('PersonProfilePage', () => {
     await user.type(textarea, 'Loves Marvel and DC');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
+    await waitFor(async () => {
+      const updated = await listNotes(person.id);
+      expect(updated).toHaveLength(1);
+      expect(updated[0].content).toBe('Loves Marvel and DC');
+    });
     expect(await screen.findByText('Loves Marvel and DC')).toBeInTheDocument();
-    const notes = await listNotes(person.id);
-    expect(notes).toHaveLength(1);
-    expect(notes[0].content).toBe('Loves Marvel and DC');
 
     // Delete, with confirmation
     await user.click(screen.getByRole('button', { name: /delete note/i }));
@@ -363,10 +367,12 @@ describe('PersonProfilePage', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    const songs = await listSongs(person.id);
-    expect(songs).toHaveLength(1);
-    expect(songs[0]).toMatchObject({ type: 'link', title: 'Perfect', source: 'YouTube' });
-    expect(screen.getByText('Perfect')).toBeInTheDocument();
+    await waitFor(async () => {
+      const stored = await listSongs(person.id);
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({ type: 'link', title: 'Perfect', source: 'YouTube' });
+    });
+    expect(await screen.findByText('Perfect')).toBeInTheDocument();
   });
 
   it('edits the person from the profile and updates the same record', async () => {
